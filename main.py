@@ -1,37 +1,61 @@
-import math
+from PIL import Image, ImageOps
 import numpy as np
-from PIL import Image
-from writeLines import bresenham_line, dotted_line, dotted_line_v2, x_loop_line, x_loop_line_hotfix_1, x_loop_line_hotfix_2, x_loop_line_v2, x_loop_line_v2_no_y_calc, x_loop_line_v2_no_y_calc_v2_for_some_unknown_reason
+from random import randint
+
+from drawing_triangle import draw_triangle
+
+
+def parseObj(filename):
+    vertices = []
+    faces = []
+
+    with open(filename, 'r') as file:
+        for line in file:
+            if line.startswith('v') and not line.startswith('vt'):
+                parts = line.strip().split()[1:]
+                x, y, z = map(float, parts)
+                vertices.append((x, y, z))
+            elif line.startswith('f'):
+                parts = line.strip().split()[1:]
+                face = []
+                for part in parts:
+                    idx = part.split("/")[0]
+                    face.append(int(idx)-1)
+                faces.append(face)
+    return vertices, faces
+
+
+def draw_object(filename):
+    vertices, faces = parseObj(filename)
+
+    width = 1024
+    height = 1024
+    scale = 100
+
+    image = np.full((height, width, 3), 255, dtype = np.uint8)
+
+    pixel_vertices =[]
+    for vertice in vertices:
+        px, py, pz = vertice[0]*scale + width // 2, vertice[1]*scale + height // 2, vertice[2]*scale
+        pixel_vertices.append((px, py, pz))
+    
+    z_buffer = np.full((width, height), np.inf)
+
+    for face in faces:
+        dot1 = pixel_vertices[face[0]]
+        dot2 = pixel_vertices[face[1]]
+        dot3 = pixel_vertices[face[2]]
+        draw_triangle(image, dot1[0], dot1[1], dot1[2], dot2[0], dot2[1], dot2[2], dot3[0], dot3[1], dot3[2], z_buffer)
+
+    return image
 
 def main():
-    width, height = 512, 512
+    obj_filename = "Monkey.obj"
+    result_image = draw_object(obj_filename)
 
-    image = np.full((width, height, 3), 255, dtype = np.uint8)
-
-    center_x = width // 2
-    center_y = height // 2
-
-    num_arms = 13
-    arm_length = 200
-    dots = 200
-    color = (0, 0, 255)
-    for i in range(num_arms):
-        angle = 2 * math.pi * i / num_arms
-        end_x = center_x + arm_length * math.cos(angle)
-        end_y = center_y + arm_length * math.sin(angle)
-        # dotted_line(image, center_x, center_y, end_x, end_y, dots, color)
-        # dotted_line_v2(image, center_x, center_y, end_x, end_y, color)
-        # x_loop_line(image, center_x, center_y, end_x, end_y, color)
-        # x_loop_line_hotfix_1(image, center_x, center_y, end_x, end_y, color)
-        # x_loop_line_hotfix_2(image, center_x, center_y, end_x, end_y, color)
-        # x_loop_line_v2(image, center_x, center_y, end_x, end_y, color)
-        # x_loop_line_v2_no_y_calc(image, center_x, center_y, end_x, end_y, color)
-        # x_loop_line_v2_no_y_calc_v2_for_some_unknown_reason(image, center_x, center_y, end_x, end_y, color)
-        bresenham_line(image, center_x, center_y, end_x, end_y, color)
-
-    img = Image.fromarray(image)
-    img.show()
-
+    image = Image.fromarray(result_image)
+    image = ImageOps.flip(image)
+    image.show()
 
 if __name__=="__main__":
     main()
