@@ -24,6 +24,41 @@ def parseObj(filename):
                 faces.append(face)
     return vertices, faces
 
+def get_rotation_matrix(vertices, px, py, pz, tx, ty, tz):
+
+    angle_x = np.radians(px)
+    angle_y = np.radians(py)
+    angle_z = np.radians(pz)
+
+    Rx = np.array([
+        [1, 0, 0],
+        [0, np.cos(angle_x), -np.sin(angle_x)],
+        [0, np.sin(angle_x), np.cos(angle_x)]
+    ])
+
+    Ry = np.array([
+        [np.cos(angle_y), 0, -np.sin(angle_y)],
+        [0, 1, 0],
+        [np.sin(angle_y), 0, np.cos(angle_y)]
+    ])
+
+    Rz = np.array([
+        [np.cos(angle_z), -np.sin(angle_z), 0],
+        [np.sin(angle_z),  np.cos(angle_z), 0],
+        [0, 0, 1]
+    ])
+
+    R = Rx.dot(Ry).dot(Rz)
+
+    translation = np.array([tx, ty, tz])
+
+    transformed_vertices = []
+    for vertice in vertices:
+        v = np.array(vertice)
+        v_transformed = R.dot(v) + translation
+        transformed_vertices.append(tuple(v_transformed))
+
+    return transformed_vertices
 
 def draw_object(filename):
     vertices, faces = parseObj(filename)
@@ -34,18 +69,36 @@ def draw_object(filename):
 
     image = np.full((height, width, 3), 255, dtype = np.uint8)
 
-    pixel_vertices =[]
-    for vertice in vertices:
-        px, py, pz = vertice[0]*scale + width // 2, vertice[1]*scale + height // 2, vertice[2]*scale
-        pixel_vertices.append((px, py, pz))
+    rx, ry, rz = 0, 180, 0
+    tx, ty, tz = 0, -3, 2
+    transformed_vertices = get_rotation_matrix(vertices, rx, ry, rz, tx, ty, tz)
+
+    ax, ay = 750, 750
+    u0 = width//2
+    v0 = width//2
+    pixel_vertices = []
+    for vertice in transformed_vertices:
+        X, Y, Z = vertice
+        u = ax*X/(Z+tz) + u0
+        v = ay*Y/(Z+tz) + v0
+        pixel_vertices.append((u, v, 1))
+
+    # pixel_vertices = []
+    # for vertice in transformed_vertices:
+    #     px, py, pz = vertice[0]*scale, vertice[1]*scale, vertice[2]*scale
+    #     pixel_vertices.append((px, py, pz))
     
     z_buffer = np.full((width, height), np.inf)
 
     for face in faces:
-        dot1 = pixel_vertices[face[0]]
-        dot2 = pixel_vertices[face[1]]
-        dot3 = pixel_vertices[face[2]]
-        draw_triangle(image, dot1[0], dot1[1], dot1[2], dot2[0], dot2[1], dot2[2], dot3[0], dot3[1], dot3[2], z_buffer)
+        dot1 = transformed_vertices[face[0]]
+        dot2 = transformed_vertices[face[1]]
+        dot3 = transformed_vertices[face[2]]
+        
+        flat_dot1 = pixel_vertices[face[0]]
+        flat_dot2 = pixel_vertices[face[1]]
+        flat_dot3 = pixel_vertices[face[2]]
+        draw_triangle(image, dot1, dot2, dot3, z_buffer, flat_dot1, flat_dot2, flat_dot3)
 
     return image
 
