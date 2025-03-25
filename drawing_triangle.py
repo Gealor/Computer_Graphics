@@ -18,17 +18,20 @@ def compute_normal(x0, y0, z0, x1, y1, z1, x2, y2, z2):
     normal = np.cross(v1, v2)
     return normal / np.linalg.norm(normal)
 
-def draw_triangle(image, dot1, dot2, dot3, z_buffer, flat_dot1, flat_dot2, flat_dot3):
+def compute_light_intensivity(vertex_normals : np.array, light_direction : np.array):
+    intesivity = []
+    for normal in vertex_normals:
+        intesivity = np.dot(light_direction, normal) / (np.linalg.norm(light_direction) * np.linalg.norm(normal))
+        intesivity.append(intesivity)
+    return intesivity
+
+def draw_triangle(image, z_buffer, dot1, dot2, dot3, flat_dot1, flat_dot2, flat_dot3, intensive1, intensive2, intensive3, light_dir, texture1, texture2, texture3, texture_img):
     
     normal = compute_normal(dot1[0], dot1[1], dot1[2], dot2[0], dot2[1], dot2[2], dot3[0], dot3[1], dot3[2])
     # print(normal) if normal[2] < 0 else None
     if normal is None:
         return
-    avg_x = dot1[0] + dot2[0] + dot3[0]
-    avg_y = dot1[1] + dot2[1] + dot3[1]
-    avg_z = dot1[2] + dot2[2] + dot3[2]
     
-    light_dir = np.array([avg_x, avg_y, avg_z])
     cos_theta = np.dot(normal, light_dir) / (np.linalg.norm(normal) * np.linalg.norm(light_dir))
     # print(cos_theta)
 
@@ -36,6 +39,7 @@ def draw_triangle(image, dot1, dot2, dot3, z_buffer, flat_dot1, flat_dot2, flat_
         return 
     
     height, width, = image.shape[:2]
+    tex_width, tex_height = texture_img.size
     
     xmin = max(0, int(min(flat_dot1[0], flat_dot2[0], flat_dot3[0])))
     xmax = min(width - 1, int(max(flat_dot1[0], flat_dot2[0], flat_dot3[0])))
@@ -47,20 +51,29 @@ def draw_triangle(image, dot1, dot2, dot3, z_buffer, flat_dot1, flat_dot2, flat_
     if abs(denominator) < 1e-10:
         return 
     
-    color = (-255 * cos_theta, 0, 0)
+    # color = (-255 * cos_theta, 0, 0)
     for x in range(xmin, xmax + 1):
-        for y in range(ymin, ymax + 1):              
+        for y in range(ymin, ymax + 1):   
             l1, l2, l3 = barycentric_coordinates(x, y, flat_dot1[0], flat_dot1[1], flat_dot2[0], flat_dot2[1], flat_dot3[0], flat_dot3[1])
+            # color = (-255 * (l1*intensive1 + l2*intensive2 + l3*intensive3), 0, 0)
             if l1>=0 and l2>=0 and l3>=0:
                 curr_z = l1*dot1[2] + l2*dot2[2] + l3*dot3[2]
                 if curr_z > z_buffer[y, x]:
                     continue
                 else:
                     z_buffer[y, x] = curr_z
-                    image[y, x] = color
+                    u_interp = l1 * texture1[0] + l2 * texture2[0] + l3 * texture3[0]
+                    v_interp = l1 * texture1[1] + l2 * texture2[1] + l3 * texture3[1]
+                    tex_x = int(round(u_interp * (tex_width - 1)))
+                    tex_y = int(round(v_interp * (tex_height - 1)))
                     
-
-
+                    tex_color = texture_img.getpixel((tex_x, tex_y))
+                    shade = -(l1*intensive1 + l2*intensive2 + l3*intensive3)
+                    final_color = shade * np.array(tex_color)
+                    image[y, x] = final_color
+                    # image[y, x] = color
+            
+            
 
 def main():
     width, height = 512, 512
