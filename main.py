@@ -49,7 +49,8 @@ def draw_object(image, width : int, height : int, scale_image : int, scale_model
         avg_x = dots[0][0] + dots[1][0] + dots[2][0]
         avg_y = dots[0][1] + dots[1][1] + dots[2][1]
         avg_z = dots[0][2] + dots[1][2] + dots[2][2]
-        light_dir = np.array([avg_x, avg_y, avg_z])
+        # light_dir = np.array([avg_x, avg_y, avg_z])
+        light_dir = np.array([0, 0, 1])
 
         intensivity_vector = compute_light_intensivity(normal1, normal2, normal3, light_dir)
 
@@ -59,6 +60,8 @@ def draw_object(image, width : int, height : int, scale_image : int, scale_model
 
 def main():
     obj_filename = "models/12268_banjofrog_v1_L3.obj"
+    # obj_filename = "models/model_1.obj"
+    # texture_name = "textures/bunny-atlas.jpg"
     texture_name = "textures/12268_banjofrog_diffuse.jpg"
     # texture_name = "dfgbn"
     try:
@@ -68,21 +71,21 @@ def main():
         texture_img = None
 
     scale_image = 1000
-    scale_model = 2
+    scale_model = 1
     # scale_image = 35000 for rabbit
     width = 1024
-    height = 600
+    height = 1024
 
-    axis = [0.5, 0.5, 0]
+    axis = [0, 1, 1]
     angle = 180
-    transfer = [5, -5, 10]
+    transfer = [0, -0.1, 4]
     z_buffer = np.full((height, width), np.inf)
 
     image = np.full((height, width, 3), 255, dtype = np.uint8)
 
     for _ in range(1):
         result_image = draw_object(image, width, height, scale_image, scale_model, obj_filename, texture_img, axis, angle, transfer, z_buffer)
-        transfer[2] += 2
+        transfer[2] += 4
         transfer[1] += 0.110
     image = Image.fromarray(result_image)
     image = ImageOps.flip(image)

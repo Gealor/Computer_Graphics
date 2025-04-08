@@ -18,7 +18,7 @@ def compute_vertex_normals(vertices, faces, transformed_vertices):
 
     for i in range(len(vertex_normals)):
         norm = np.linalg.norm(vertex_normals[i])
-        vertex_normals[i] /= norm
+        vertex_normals[i] = np.array(vertex_normals[i]) / norm
     return vertex_normals
 
 def compute_normal(x0, y0, z0, x1, y1, z1, x2, y2, z2):

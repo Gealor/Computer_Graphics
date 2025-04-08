@@ -6,17 +6,6 @@ from vertex_and_matrices.compute_vectors import compute_normal, barycentric_coor
 
 def draw_triangle(image, texture_img, z_buffer, dots, flat_dots, intensive_vector, light_dir, textures):
     
-    normal = compute_normal(
-        dots[0][0], dots[0][1], dots[0][2], 
-        dots[1][0], dots[1][1], dots[1][2], 
-        dots[2][0], dots[2][1], dots[2][2],
-    )
-
-    cos_theta = np.dot(normal, light_dir) / (np.linalg.norm(normal) * np.linalg.norm(light_dir))
-
-    if cos_theta >= 0:
-        return 
-    
     height, width, = image.shape[:2]
     
     if texture_img:
@@ -37,13 +26,14 @@ def draw_triangle(image, texture_img, z_buffer, dots, flat_dots, intensive_vecto
                 if curr_z > z_buffer[y, x]:
                     continue
                 else:
+                    shade = -(l[0]*intensive_vector[0] + l[1]*intensive_vector[1] + l[2]*intensive_vector[2])
                     if texture_img:
                         tex_x, tex_y = texturing_pixel(z_buffer, x, y, curr_z, textures[0], textures[1], textures[2], l, tex_size)
                         tex_color = texture_img.getpixel((tex_x, tex_y))
                     else: 
-                        tex_color = (-255*cos_theta, -255*cos_theta, -255*cos_theta)
+                        tex_color = (255*shade, 255*shade, 255*shade)
                         z_buffer[y, x] = curr_z
-                    shade = -(l[0]*intensive_vector[0] + l[1]*intensive_vector[1] + l[2]*intensive_vector[2])
+    
                     final_color = shade * np.array(tex_color)
                     image[y, x] = final_color
                     # image[y, x] = color
