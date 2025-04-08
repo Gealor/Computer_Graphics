@@ -35,13 +35,13 @@ def draw_object(image, width : int, height : int, scale_image : int, scale_model
         u = ax*X/(Z+tz) + u0
         v = ay*Y/(Z+tz) + v0
         pixel_vertices.append((u, v, 1))
-
+     
     for face_idx, face in enumerate(faces):
         dots = tuple(transformed_vertices[i] for i in face)
     
         flat_dots = tuple(pixel_vertices[i] for i in face)
 
-        normal1, normal2, normal3 = vertices_normals[face[0]], vertices_normals[face[1]], vertices_normals[face[2]]
+        normals = [vertices_normals[i] for i in face]
 
         tex_idx_face = texture_faces[face_idx]
         textures = tuple(vertices_texture[i] for i in tex_idx_face)
@@ -52,17 +52,18 @@ def draw_object(image, width : int, height : int, scale_image : int, scale_model
         # light_dir = np.array([avg_x, avg_y, avg_z])
         light_dir = np.array([0, 0, 1])
 
-        intensivity_vector = compute_light_intensivity(normal1, normal2, normal3, light_dir)
+        # intensivity_vector = compute_light_intensivity(normal1, normal2, normal3, light_dir)
 
-        draw_polygon(image, texture_img, z_buffer, dots, flat_dots, intensivity_vector, light_dir, textures)
+        draw_polygon(image, texture_img, z_buffer, dots, flat_dots, normals, light_dir, textures)
 
     return image
 
 def main():
     obj_filename = "models/12268_banjofrog_v1_L3.obj"
+    texture_name = "textures/12268_banjofrog_diffuse.jpg"
     # obj_filename = "models/model_1.obj"
     # texture_name = "textures/bunny-atlas.jpg"
-    texture_name = "textures/12268_banjofrog_diffuse.jpg"
+   
     # texture_name = "dfgbn"
     try:
         texture_img = Image.open(texture_name).convert("RGB")
@@ -78,7 +79,7 @@ def main():
 
     axis = [0, 1, 1]
     angle = 180
-    transfer = [0, -0.1, 4]
+    transfer = [0, -1, 4]
     z_buffer = np.full((height, width), np.inf)
 
     image = np.full((height, width, 3), 255, dtype = np.uint8)
