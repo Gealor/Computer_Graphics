@@ -41,7 +41,7 @@ def draw_object(image, width : int, height : int, scale_image : int, scale_model
     
         flat_dots = tuple(pixel_vertices[i] for i in face)
 
-        normals = [vertices_normals[i] for i in face]
+        normals = tuple(vertices_normals[i] for i in face)
 
         tex_idx_face = texture_faces[face_idx]
         textures = tuple(vertices_texture[i] for i in tex_idx_face)
