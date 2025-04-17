@@ -63,6 +63,9 @@ def main():
     texture_name = "textures/12268_banjofrog_diffuse.jpg"
     # obj_filename = "models/model_1.obj"
     # texture_name = "textures/bunny-atlas.jpg"
+
+    # obj_filename = "models/12221_Cat_v1_l3.obj"
+    # texture_name = "textures/Cat_diffuse.jpg"
    
     # texture_name = "dfgbn"
     try:
@@ -79,15 +82,16 @@ def main():
 
     axis = [0, 1, 1]
     angle = 180
-    transfer = [0, -1, 4]
+    # transfer = [0, -1, 50] # for cat
+    transfer = [0, -1, 4] 
     z_buffer = np.full((height, width), np.inf)
 
     image = np.full((height, width, 3), 255, dtype = np.uint8)
 
-    for _ in range(1):
+    for _ in range(3):
         result_image = draw_object(image, width, height, scale_image, scale_model, obj_filename, texture_img, axis, angle, transfer, z_buffer)
-        transfer[2] += 4
-        transfer[1] += 0.110
+        transfer[2] += 10
+        transfer[1] += 10
     image = Image.fromarray(result_image)
     image = ImageOps.flip(image)
     image.show()
