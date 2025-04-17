@@ -8,7 +8,7 @@ def quaternion_from_angle(axis, angle):
     xyz = axis * np.sin(angle_rad/2)
     return np.array([w, *xyz])
 
-def get_rotation_matrix(vertices, axis, angle, tx, ty, tz):
+def get_transform_model(vertices, axis, angle, tx, ty, tz):
 
     q = quaternion_from_angle(axis, angle)
     q = q / np.linalg.norm(q)
